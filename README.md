@@ -1,6 +1,6 @@
-# funflags
+# FunFlags
 
-A new Flutter project.
+FunFlags is a mobile app which provide an interactive learning platform to learn and practice the knowledge of country flags.
 
 ## Getting Started
 
