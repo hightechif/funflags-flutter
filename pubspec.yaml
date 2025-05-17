@@ -1,5 +1,5 @@
 name: funflags
-description: "A new Flutter project."
+description: "FunFlags is a mobile app which provide an interactive learning platform to learn and practice the knowledge of country flags."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -34,6 +34,11 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+  provider: ^6.0.5         # State management
+  http: ^1.1.0             # API requests
+  shared_preferences: ^2.2.0  # Local storage
+  cached_network_image: ^3.2.3  # Image caching
+  flutter_svg: ^2.0.7      # SVG support for flags
 
 dev_dependencies:
   flutter_test:
