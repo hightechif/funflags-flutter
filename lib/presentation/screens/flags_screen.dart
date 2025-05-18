@@ -229,52 +229,54 @@ class _FlagsScreenState extends State<FlagsScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  height: 5,
-                  width: 40,
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(2.5),
+        return SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    height: 5,
+                    width: 40,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2.5),
+                    ),
                   ),
                 ),
-              ),
-              Center(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.network(country.flagUrl, height: 120),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Center(
-                child: Text(
-                  country.name,
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
+                Center(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(country.flagUrl, height: 120),
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              _buildInfoRow('Country Code', country.code),
-              _buildInfoRow('Continent', country.continent),
-              const SizedBox(height: 16),
-              Center(
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text('Close'),
+                const SizedBox(height: 16),
+                Center(
+                  child: Text(
+                    country.name,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 16),
+                _buildInfoRow('Country Code', country.code),
+                _buildInfoRow('Continent', country.continent),
+                const SizedBox(height: 16),
+                Center(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: const Text('Close'),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },

@@ -133,128 +133,130 @@ class _QuizScreenState extends State<QuizScreen> {
       body:
           _isLoading
               ? const Center(child: CircularProgressIndicator())
-              : Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  children: [
-                    LinearProgressIndicator(
-                      value: (_currentQuestionIndex + 1) / _countries.length,
-                      backgroundColor: Colors.grey[300],
-                      color: Theme.of(context).primaryColor,
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: Text(
-                        'Question ${_currentQuestionIndex + 1} of ${_countries.length}',
-                        style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+              : SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      LinearProgressIndicator(
+                        value: (_currentQuestionIndex + 1) / _countries.length,
+                        backgroundColor: Colors.grey[300],
+                        color: Theme.of(context).primaryColor,
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    Container(
-                      height: 160,
-                      width: 320,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(7),
-                        child: Image.network(
-                          _countries[_currentQuestionIndex].flagUrl,
-                          fit: BoxFit.contain,
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return Center(
-                              child: CircularProgressIndicator(
-                                value:
-                                    loadingProgress.expectedTotalBytes != null
-                                        ? loadingProgress
-                                                .cumulativeBytesLoaded /
-                                            loadingProgress.expectedTotalBytes!
-                                        : null,
-                              ),
-                            );
-                          },
-                          errorBuilder: (context, error, stackTrace) {
-                            return const Center(
-                              child: Text('Failed to load flag image'),
-                            );
-                          },
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: Text(
+                          'Question ${_currentQuestionIndex + 1} of ${_countries.length}',
+                          style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 24),
-                    const Text(
-                      'Which country does this flag belong to?',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                      const SizedBox(height: 16),
+                      Container(
+                        height: 160,
+                        width: 320,
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(7),
+                          child: Image.network(
+                            _countries[_currentQuestionIndex].flagUrl,
+                            fit: BoxFit.contain,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Center(
+                                child: CircularProgressIndicator(
+                                  value:
+                                      loadingProgress.expectedTotalBytes != null
+                                          ? loadingProgress
+                                                  .cumulativeBytesLoaded /
+                                              loadingProgress.expectedTotalBytes!
+                                          : null,
+                                ),
+                              );
+                            },
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Center(
+                                child: Text('Failed to load flag image'),
+                              );
+                            },
+                          ),
+                        ),
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-                    ...List.generate(4, (index) {
-                      bool isCorrect =
-                          _countries[_optionIndices[index]].name ==
-                          _countries[_currentQuestionIndex].name;
-                      bool isSelected = _selectedAnswerIndex == index;
+                      const SizedBox(height: 24),
+                      const Text(
+                        'Which country does this flag belong to?',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 24),
+                      ...List.generate(4, (index) {
+                        bool isCorrect =
+                            _countries[_optionIndices[index]].name ==
+                            _countries[_currentQuestionIndex].name;
+                        bool isSelected = _selectedAnswerIndex == index;
 
-                      Color? backgroundColor;
-                      if (_answered) {
-                        if (isCorrect) {
-                          backgroundColor = Colors.green[100];
-                        } else if (isSelected) {
-                          backgroundColor = Colors.red[100];
+                        Color? backgroundColor;
+                        if (_answered) {
+                          if (isCorrect) {
+                            backgroundColor = Colors.green[100];
+                          } else if (isSelected) {
+                            backgroundColor = Colors.red[100];
+                          }
                         }
-                      }
 
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12.0),
-                        child: ElevatedButton(
-                          onPressed:
-                              _answered ? null : () => _checkAnswer(index),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: backgroundColor,
-                            foregroundColor: Colors.black87,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              side: BorderSide(
-                                color:
-                                    _answered && isCorrect
-                                        ? Colors.green
-                                        : _answered && isSelected
-                                        ? Colors.red
-                                        : Colors.grey.shade300,
-                                width:
-                                    _answered && (isCorrect || isSelected)
-                                        ? 2
-                                        : 1,
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12.0),
+                          child: ElevatedButton(
+                            onPressed:
+                                _answered ? null : () => _checkAnswer(index),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: backgroundColor,
+                              foregroundColor: Colors.black87,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                side: BorderSide(
+                                  color:
+                                      _answered && isCorrect
+                                          ? Colors.green
+                                          : _answered && isSelected
+                                          ? Colors.red
+                                          : Colors.grey.shade300,
+                                  width:
+                                      _answered && (isCorrect || isSelected)
+                                          ? 2
+                                          : 1,
+                                ),
                               ),
                             ),
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  _countries[_optionIndices[index]].name,
-                                  style: const TextStyle(fontSize: 16),
-                                  textAlign: TextAlign.center,
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    _countries[_optionIndices[index]].name,
+                                    style: const TextStyle(fontSize: 16),
+                                    textAlign: TextAlign.center,
+                                  ),
                                 ),
-                              ),
-                              if (_answered)
-                                Icon(
-                                  isCorrect
-                                      ? Icons.check_circle
-                                      : (isSelected ? Icons.cancel : null),
-                                  color: isCorrect ? Colors.green : Colors.red,
-                                ),
-                            ],
+                                if (_answered)
+                                  Icon(
+                                    isCorrect
+                                        ? Icons.check_circle
+                                        : (isSelected ? Icons.cancel : null),
+                                    color: isCorrect ? Colors.green : Colors.red,
+                                  ),
+                              ],
+                            ),
                           ),
-                        ),
-                      );
-                    }),
-                  ],
+                        );
+                      }),
+                    ],
+                  ),
                 ),
               ),
     );
