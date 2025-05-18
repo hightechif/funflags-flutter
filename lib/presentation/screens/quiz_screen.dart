@@ -152,7 +152,7 @@ class _QuizScreenState extends State<QuizScreen> {
                     const SizedBox(height: 16),
                     Container(
                       height: 160,
-                      width: double.infinity,
+                      width: 320,
                       decoration: BoxDecoration(
                         border: Border.all(color: Colors.grey),
                         borderRadius: BorderRadius.circular(8),
@@ -161,7 +161,7 @@ class _QuizScreenState extends State<QuizScreen> {
                         borderRadius: BorderRadius.circular(7),
                         child: Image.network(
                           _countries[_currentQuestionIndex].flagUrl,
-                          fit: BoxFit.cover,
+                          fit: BoxFit.contain,
                           loadingBuilder: (context, child, loadingProgress) {
                             if (loadingProgress == null) return child;
                             return Center(
