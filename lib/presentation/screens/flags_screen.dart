@@ -212,7 +212,7 @@ class _FlagsScreenState extends State<FlagsScreen> {
           _changeRegion(region);
         },
         backgroundColor: Colors.grey[200],
-        selectedColor: Theme.of(context).primaryColor.withAlpha((0.2 * 255).toInt()),
+        selectedColor: Theme.of(context).primaryColor.withValues(alpha: (0.2 * 255),),
         labelStyle: TextStyle(
           color: isSelected ? Theme.of(context).primaryColor : Colors.black87,
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
