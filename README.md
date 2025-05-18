@@ -1,6 +1,6 @@
 # FunFlags
 
-FunFlags is a mobile app which provide an interactive learning platform to learn and practice the knowledge of country flags.
+FunFlags is a mobile app that provides an interactive learning platform to learn and practice the knowledge of country flags.
 
 ## Getting Started
 

@@ -1,5 +1,5 @@
 name: funflags
-description: "FunFlags is a mobile app which provide an interactive learning platform to learn and practice the knowledge of country flags."
+description: "FunFlags is a mobile app that provides an interactive learning platform to learn and practice the knowledge of country flags."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
