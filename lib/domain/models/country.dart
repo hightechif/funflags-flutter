@@ -19,4 +19,13 @@ class Country {
       continent: json['region'],
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': {'common': name},
+      'cca2': code,
+      'continents': [continent],
+      'flags': {'png': flagUrl},
+    };
+  }
 }

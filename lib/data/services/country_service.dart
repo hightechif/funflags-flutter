@@ -13,7 +13,7 @@ class CountryService {
       final List<dynamic> data = json.decode(response.body);
       return data.map((json) => Country.fromJson(json)).toList();
     } else {
-      throw Exception('Failed to load countries');
+      throw Exception('Failed to load countries for region: $region');
     }
   }
 
@@ -24,7 +24,7 @@ class CountryService {
       final List<dynamic> data = json.decode(response.body);
       return data.map((json) => Country.fromJson(json)).toList();
     } else {
-      throw Exception('Failed to load countries');
+      throw Exception('Failed to load all countries');
     }
   }
 }
