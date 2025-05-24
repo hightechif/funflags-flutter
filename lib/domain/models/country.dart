@@ -1,22 +1,22 @@
 class Country {
   final String name;
   final String code;
-  final String flagUrl;
   final String continent;
+  final String flagUrl;
 
   Country({
     required this.name,
     required this.code,
-    required this.flagUrl,
     required this.continent,
+    required this.flagUrl,
   });
 
   factory Country.fromJson(Map<String, dynamic> json) {
     return Country(
-      name: json['name']['common'],
-      code: json['cca2'],
-      flagUrl: json['flags']['png'],
-      continent: json['region'],
+      name: json['name']['common'] ?? '',
+      code: json['cca2'] ?? '',
+      continent: json['continents']?.first ?? '',
+      flagUrl: json['flags']['png'] ?? '',
     );
   }
 

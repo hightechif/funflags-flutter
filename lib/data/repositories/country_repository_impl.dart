@@ -1,4 +1,4 @@
-// lib/data/repositories/country_repository_impl.dart
+import 'package:flutter/foundation.dart';
 import 'package:funflags/data/services/cache_service.dart';
 import 'package:funflags/data/services/country_service.dart';
 import 'package:funflags/domain/models/country.dart';
@@ -9,52 +9,60 @@ class CountryRepositoryImpl implements CountryRepository {
   List<Country> _allCountries = [];
   List<Country> _regionCountries = [];
   String? _currentRegion;
+  bool _isBackgroundRefreshing = false;
 
   @override
   Future<PaginatedResult<Country>> getCountries({
     String? region,
     int page = 1,
-    int pageSize = 10,
+    int pageSize = 20,
   }) async {
     try {
-      List<Country> countries;
       String cacheKey = region ?? 'all';
+      bool regionChanged = region != _currentRegion;
 
-      // Check if we need to load new data
-      if (region != _currentRegion || _allCountries.isEmpty) {
-        // Try to get from cache first
+      // If region changed or no data in memory, try cache first
+      if (regionChanged || _allCountries.isEmpty) {
         final cachedCountries = await getCachedCountries(cacheKey);
 
         if (cachedCountries != null) {
-          countries = cachedCountries;
-        } else {
-          // Fetch from API
+          // Load from cache immediately
+          cachedCountries.sort((a, b) => a.name.compareTo(b.name));
+
           if (region == null || region == 'World') {
-            countries = await CountryService.getAllCountries();
+            _allCountries = cachedCountries;
           } else {
-            countries = await CountryService.getCountriesByRegion(region);
+            _regionCountries = cachedCountries;
           }
+          _currentRegion = region;
 
-          // Cache the results
-          await cacheCountries(countries, cacheKey);
-        }
-
-        // Sort countries alphabetically
-        countries.sort((a, b) => a.name.compareTo(b.name));
-
-        if (region == null || region == 'World') {
-          _allCountries = countries;
+          // Check if cache needs refresh in background
+          final isExpired = await CacheService.isCacheExpired(cacheKey);
+          if (isExpired && !_isBackgroundRefreshing) {
+            _refreshDataInBackground(region, cacheKey);
+          }
         } else {
-          _regionCountries = countries;
+          // No cache available, fetch from API
+          final freshCountries = await _fetchFromAPI(region);
+          freshCountries.sort((a, b) => a.name.compareTo(b.name));
+
+          if (region == null || region == 'World') {
+            _allCountries = freshCountries;
+          } else {
+            _regionCountries = freshCountries;
+          }
+          _currentRegion = region;
+
+          // Cache the fresh data
+          await cacheCountries(freshCountries, cacheKey);
         }
-        _currentRegion = region;
-      } else {
-        // Use existing data
-        countries =
-            (region == null || region == 'World')
-                ? _allCountries
-                : _regionCountries;
       }
+
+      // Get data from memory
+      List<Country> countries =
+          (region == null || region == 'World')
+              ? _allCountries
+              : _regionCountries;
 
       // Implement pagination
       final startIndex = (page - 1) * pageSize;
@@ -83,58 +91,63 @@ class CountryRepositoryImpl implements CountryRepository {
     }
   }
 
+  Future<List<Country>> _fetchFromAPI(String? region) async {
+    if (region == null || region == 'World') {
+      return await CountryService.getAllCountries();
+    } else {
+      return await CountryService.getCountriesByRegion(region);
+    }
+  }
+
+  Future<void> _refreshDataInBackground(String? region, String cacheKey) async {
+    if (_isBackgroundRefreshing) return;
+
+    _isBackgroundRefreshing = true;
+
+    try {
+      final freshCountries = await _fetchFromAPI(region);
+      freshCountries.sort((a, b) => a.name.compareTo(b.name));
+
+      // Update cache
+      await cacheCountries(freshCountries, cacheKey);
+
+      // Update in-memory data
+      if (region == null || region == 'World') {
+        _allCountries = freshCountries;
+      } else if (region == _currentRegion) {
+        _regionCountries = freshCountries;
+      }
+    } catch (e) {
+      // Silently fail background refresh - user still has cached data
+      if (kDebugMode) {
+        print('Background refresh failed: $e');
+      }
+    } finally {
+      _isBackgroundRefreshing = false;
+    }
+  }
+
   @override
   Future<List<Country>> searchCountries(String query, {String? region}) async {
     List<Country> countries;
 
     if (region == null || region == 'World') {
       if (_allCountries.isEmpty) {
-        final result = await getCountries(
-          region: region,
-          page: 1,
-          pageSize: 1000,
-        );
-        countries = await _getAllCountriesForSearch(region);
-      } else {
-        countries = _allCountries;
+        // Try to load from cache first, then API if needed
+        await getCountries(region: region, page: 1, pageSize: 1000);
       }
+      countries = _allCountries;
     } else {
       if (_regionCountries.isEmpty || _currentRegion != region) {
-        final result = await getCountries(
-          region: region,
-          page: 1,
-          pageSize: 1000,
-        );
-        countries = await _getAllCountriesForSearch(region);
-      } else {
-        countries = _regionCountries;
+        // Try to load from cache first, then API if needed
+        await getCountries(region: region, page: 1, pageSize: 1000);
       }
+      countries = _regionCountries;
     }
 
     return countries.where((country) {
       return country.name.toLowerCase().contains(query.toLowerCase());
     }).toList();
-  }
-
-  Future<List<Country>> _getAllCountriesForSearch(String? region) async {
-    // Get all countries for search (not paginated)
-    List<Country> allCountries = [];
-    int page = 1;
-    const pageSize = 50;
-
-    while (true) {
-      final result = await getCountries(
-        region: region,
-        page: page,
-        pageSize: pageSize,
-      );
-      allCountries.addAll(result.items);
-
-      if (!result.hasMore) break;
-      page++;
-    }
-
-    return allCountries;
   }
 
   @override
@@ -153,5 +166,38 @@ class CountryRepositoryImpl implements CountryRepository {
     _allCountries.clear();
     _regionCountries.clear();
     _currentRegion = null;
+  }
+
+  @override
+  Future<bool> hasCachedData(String key) async {
+    return await CacheService.hasCachedData(key);
+  }
+
+  @override
+  Future<DateTime?> getCacheTimestamp(String key) async {
+    return await CacheService.getCacheTimestamp(key);
+  }
+
+  @override
+  Future<void> forceRefresh({String? region}) async {
+    String cacheKey = region ?? 'all';
+
+    try {
+      final freshCountries = await _fetchFromAPI(region);
+      freshCountries.sort((a, b) => a.name.compareTo(b.name));
+
+      // Update memory
+      if (region == null || region == 'World') {
+        _allCountries = freshCountries;
+      } else {
+        _regionCountries = freshCountries;
+      }
+      _currentRegion = region;
+
+      // Update cache
+      await cacheCountries(freshCountries, cacheKey);
+    } catch (e) {
+      throw Exception('Failed to refresh data: $e');
+    }
   }
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:funflags/data/repositories/country_repository_impl.dart';
 import 'package:funflags/domain/models/country.dart';
@@ -22,7 +23,7 @@ class _FlagsScreenState extends State<FlagsScreen> {
 
   // Pagination
   int _currentPage = 1;
-  static const int _pageSize = 10;
+  static const int _pageSize = 20;
   bool _hasMore = true;
 
   // Scroll controller for endless scrolling
@@ -31,6 +32,10 @@ class _FlagsScreenState extends State<FlagsScreen> {
   // Search mode
   bool _isSearchMode = false;
   List<Country> _searchResults = [];
+
+  // Cache status
+  bool _showingCachedData = false;
+  DateTime? _cacheTimestamp;
 
   @override
   void initState() {
@@ -68,10 +73,19 @@ class _FlagsScreenState extends State<FlagsScreen> {
         _countries.clear();
         _currentPage = 1;
         _hasMore = true;
+        _showingCachedData = false;
       }
     });
 
     try {
+      String cacheKey = _selectedRegion == 'World' ? 'all' : _selectedRegion;
+
+      // Check cache status
+      final hasCached = await _countryRepository.hasCachedData(cacheKey);
+      final cacheTimestamp = await _countryRepository.getCacheTimestamp(
+        cacheKey,
+      );
+
       final result = await _countryRepository.getCountries(
         region: _selectedRegion == 'World' ? null : _selectedRegion,
         page: _currentPage,
@@ -86,6 +100,8 @@ class _FlagsScreenState extends State<FlagsScreen> {
         }
         _hasMore = result.hasMore;
         _isLoading = false;
+        _showingCachedData = hasCached;
+        _cacheTimestamp = cacheTimestamp;
       });
     } catch (e) {
       setState(() {
@@ -141,6 +157,7 @@ class _FlagsScreenState extends State<FlagsScreen> {
       _searchResults.clear();
       _currentPage = 1;
       _hasMore = true;
+      _showingCachedData = false;
     });
     _loadCountries(refresh: true);
   }
@@ -186,8 +203,45 @@ class _FlagsScreenState extends State<FlagsScreen> {
   }
 
   Future<void> _refreshCountries() async {
-    await _countryRepository.clearCache();
-    _changeRegion(_selectedRegion);
+    try {
+      await _countryRepository.forceRefresh(
+        region: _selectedRegion == 'World' ? null : _selectedRegion,
+      );
+      _changeRegion(_selectedRegion);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Data refreshed successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to refresh: $e')));
+      }
+    }
+  }
+
+  String _formatCacheDate(DateTime dateTime) {
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+
+    if (difference.inMinutes < 1) {
+      return 'just now';
+    } else if (difference.inMinutes < 60) {
+      return '${difference.inMinutes}m ago';
+    } else if (difference.inHours < 24) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays}d ago';
+    } else {
+      // Format as date for older entries
+      return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
+    }
   }
 
   @override
@@ -199,9 +253,28 @@ class _FlagsScreenState extends State<FlagsScreen> {
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _refreshCountries,
-            tooltip: 'Refresh data',
+            tooltip: 'Force refresh data',
           ),
         ],
+        bottom:
+            _showingCachedData && _cacheTimestamp != null && kDebugMode
+                ? PreferredSize(
+                  preferredSize: const Size.fromHeight(20),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    color: Colors.blue.withValues(alpha: 0.1),
+                    child: Text(
+                      'Using cached data from ${_formatCacheDate(_cacheTimestamp!)}',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.blue[700],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                )
+                : null,
       ),
       body: Column(
         children: [
@@ -275,6 +348,14 @@ class _FlagsScreenState extends State<FlagsScreen> {
                     Text(
                       'Scroll for more',
                       style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    ),
+                  ],
+                  if (_showingCachedData) ...[
+                    const SizedBox(width: 8),
+                    Icon(
+                      Icons.offline_bolt,
+                      size: 16,
+                      color: Colors.green[600],
                     ),
                   ],
                 ],

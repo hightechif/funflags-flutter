@@ -15,4 +15,10 @@ abstract class CountryRepository {
   Future<List<Country>?> getCachedCountries(String key);
 
   Future<void> clearCache();
+
+  Future<bool> hasCachedData(String key);
+
+  Future<DateTime?> getCacheTimestamp(String key);
+
+  Future<void> forceRefresh({String? region});
 }
